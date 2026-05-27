@@ -12,12 +12,8 @@ workflows:
         script: flutter pub get
       - name: Build Android APK
         script: |
-          cd android
-          echo "android.minSdkVersion=21" >> gradle.properties
-          cd ..
           flutter build apk --release
     artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
       - build/app/outputs/flutter-apk/*.apk
 
   ios_build:
@@ -27,22 +23,18 @@ workflows:
     environment:
       flutter: 3.44.0
       xcode: 16
-      cocoapods: 1.15.2
     scripts:
       - name: Get Flutter dependencies
         script: flutter pub get
-      - name: Install CocoaPods dependencies
+      - name: Install CocoaPods
         script: |
-          cd ios
-          pod install
-          cd ..
-      - name: Build iOS IPA
+          cd ios && pod install && cd ..
+      - name: Build iOS for simulator
         script: |
-          flutter build ipa --release
-      - name: List build outputs
+          flutter build ios --simulator --no-codesign
+      - name: Find build outputs
         script: |
-          ls -la build/ios/ipa/ || echo "IPA directory not found"
-          find build/ios -name "*.ipa" 2>/dev/null
+          find . -name "*.app" -type d 2>/dev/null | head -5
     artifacts:
-      - build/ios/ipa/*.ipa
-      - build/ios/**/*.ipa
+      - build/ios/iphonesimulator/*.app
+      - build/ios/**/*.app
