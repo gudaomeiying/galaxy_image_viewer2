@@ -8,9 +8,10 @@ workflows:
       xcode: 16
       java: 17
     scripts:
-      - name: Get Flutter dependencies
-        script: flutter pub get
-      - name: Build Android APK
+      - name: Get dependencies
+        script: |
+          flutter pub get
+      - name: Build APK
         script: |
           flutter build apk --release
     artifacts:
@@ -24,17 +25,11 @@ workflows:
       flutter: 3.44.0
       xcode: 16
     scripts:
-      - name: Get Flutter dependencies
-        script: flutter pub get
-      - name: Install CocoaPods
+      - name: Get dependencies
         script: |
-          cd ios && pod install && cd ..
-      - name: Build iOS for simulator
+          flutter pub get
+      - name: Build for simulator
         script: |
           flutter build ios --simulator --no-codesign
-      - name: Find build outputs
-        script: |
-          find . -name "*.app" -type d 2>/dev/null | head -5
     artifacts:
-      - build/ios/iphonesimulator/*.app
-      - build/ios/**/*.app
+      - build/ios/iphonesimulator/**/*.app
