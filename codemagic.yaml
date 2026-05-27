@@ -9,27 +9,47 @@ workflows:
       java: 17
     scripts:
       - name: Get dependencies
-        script: |
-          flutter pub get
+        script: flutter pub get
       - name: Build APK
-        script: |
-          flutter build apk --release
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
 
   ios_build:
-    name: iOS Build
+    name: iOS Unsigned IPA
+    max_build_duration: 60
     instance_type: mac_mini_m2
-    max_build_duration: 30
     environment:
       flutter: 3.44.0
       xcode: 16
+      cocoapods: default
     scripts:
       - name: Get dependencies
+        script: flutter pub get
+      - name: Install CocoaPods
         script: |
-          flutter pub get
-      - name: Build for simulator
+          cd ios
+          pod install
+      - name: Build unsigned IPA
         script: |
-          flutter build ios --simulator --no-codesign
+          cd ios
+          xcodebuild \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ./build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            | xcpretty
+      - name: Package IPA
+        script: |
+          APP_PATH=$(find ios/build -name "Runner.app" | head -1)
+          mkdir -p ios/build/ipa/Payload
+          cp -r "$APP_PATH" ios/build/ipa/Payload/
+          cd ios/build/ipa
+          zip -r ../GalaxyImageViewer-unsigned.ipa Payload
+          echo "✅ IPA created at ios/build/GalaxyImageViewer-unsigned.ipa"
     artifacts:
-      - build/ios/iphonesimulator/**/*.app
+      - ios/build/GalaxyImageViewer-unsigned.ipa
